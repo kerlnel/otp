@@ -35,8 +35,8 @@
 
 -export([merge/3, rmerge/3, sort/2, umerge/3, rumerge/3, usort/2]).
 
--export([all/2,any/2,map/2,flatmap/2,foldl/3,ifoldl/3,foldr/3,ifoldr/3,filter/2,
-	 partition/2,zf/2,
+-export([all/2,any/2,map/2,imap/2,flatmap/2,
+	 foldl/3,ifoldl/3,foldr/3,ifoldr/3,filter/2,partition/2,zf/2,
 	 mapfoldl/3,mapfoldr/3,foreach/2,takewhile/2,dropwhile/2,splitwith/2,
 	 split/2]).
 
@@ -1223,6 +1223,21 @@ any(Pred, []) when is_function(Pred, 1) -> false.
 map(F, [H|T]) ->
     [F(H)|map(F, T)];
 map(F, []) when is_function(F, 1) -> [].
+
+-spec imap(Fun, List1) -> List2 when
+      Fun :: fun((A, Index) -> B),
+      List1 :: [A],
+      List2 :: [B],
+      A :: term(),
+      B :: term(),
+      Index :: integer().
+
+imap(F, [H|T]) ->
+    [F(H, 1)|imap(F, 2, T)];
+imap(F, []) when is_function(F, 2) -> [].
+imap(F, Index, [H|T]) ->
+    [F(H, Index)|imap(F, Index+1, T)];
+imap(F, _, []) when is_function(F, 2) -> [].
 
 -spec flatmap(Fun, List1) -> List2 when
       Fun :: fun((A) -> [B]),

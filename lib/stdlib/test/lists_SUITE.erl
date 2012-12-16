@@ -60,7 +60,7 @@
 	 ufunsort_error/1,
 	 zip_unzip/1, zip_unzip3/1, zipwith/1, zipwith3/1,
 	 filter_partition/1, 
-	 ifoldl/1, ifoldr/1,
+	 ifoldl/1, ifoldr/1, imap/1,
 	 otp_5939/1, otp_6023/1, otp_6606/1, otp_7230/1,
 	 suffix/1, subtract/1]).
 
@@ -87,7 +87,7 @@ all() ->
      {group, funsort}, {group, ufunsort}, {group, sublist},
      {group, flatten}, {group, seq}, zip_unzip, zip_unzip3,
      zipwith, zipwith3, filter_partition, {group, tickets},
-     ifoldl, ifoldr,
+     ifoldl, ifoldr, imap,
      suffix, subtract].
 
 groups() -> 
@@ -2607,6 +2607,25 @@ ifoldr(Config) when is_list(Config) ->
     BadFun = fun(A, B) -> {A, B} end,
     ?line {'EXIT',{function_clause,_}} = (catch lists:ifoldr(badfun, [], [])),
     ?line {'EXIT',{function_clause,_}} = (catch lists:ifoldr(BadFun, [], [])),
+    
+    ok.
+
+%% Test lists:imap/2.
+imap(Config) when is_list(Config) ->
+    Map = fun(A, I) -> A*I end,
+    
+    ?line [] = lists:imap(Map, []),
+    ?line [2, 4] = lists:imap(Map, [2, 2]),
+    
+    %% Longer lists.
+    ?line Seq = lists:seq(120, 300),
+    ?line Res = lists:imap(Map, Seq),
+    ?line [120, 242|_] = Res,
+    
+    %% Error cases.
+    BadFun = fun(_) -> 1 end,
+    ?line {'EXIT',{function_clause,_}} = (catch lists:imap(badfun, [])),
+    ?line {'EXIT',{function_clause,_}} = (catch lists:imap(BadFun, [])),
     
     ok.
 
