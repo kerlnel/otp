@@ -60,7 +60,7 @@
 	 ufunsort_error/1,
 	 zip_unzip/1, zip_unzip3/1, zipwith/1, zipwith3/1,
 	 filter_partition/1, 
-	 ifoldl/1,
+	 ifoldl/1, ifoldr/1,
 	 otp_5939/1, otp_6023/1, otp_6606/1, otp_7230/1,
 	 suffix/1, subtract/1]).
 
@@ -87,7 +87,7 @@ all() ->
      {group, funsort}, {group, ufunsort}, {group, sublist},
      {group, flatten}, {group, seq}, zip_unzip, zip_unzip3,
      zipwith, zipwith3, filter_partition, {group, tickets},
-     ifoldl,
+     ifoldl, ifoldr,
      suffix, subtract].
 
 groups() -> 
@@ -2585,9 +2585,28 @@ ifoldl(Config) when is_list(Config) ->
     ?line Seq = [A || {_,A} <- lists:reverse(Res)],
     
     %% Error cases.
-    BadFun = fun(A, B) -> B end,
+    BadFun = fun(A, B) -> {A, B} end,
     ?line {'EXIT',{function_clause,_}} = (catch lists:ifoldl(badfun, [], [])),
     ?line {'EXIT',{function_clause,_}} = (catch lists:ifoldl(BadFun, [], [])),
+    
+    ok.
+
+%% Test lists:ifoldr/3.
+ifoldr(Config) when is_list(Config) ->
+    Fold = fun(A, I, Acc) -> [{I, A}|Acc] end,
+    
+    ?line [] = lists:ifoldr(Fold, [], []),
+    ?line [{1,a}] = lists:ifoldr(Fold, [], [a]),
+    
+    %% Longer lists.
+    ?line Seq = lists:seq(43, 200),
+    ?line Res = lists:ifoldr(Fold, [], Seq),
+    ?line Seq = [A || {_,A} <- Res],
+    
+    %% Error cases.
+    BadFun = fun(A, B) -> {A, B} end,
+    ?line {'EXIT',{function_clause,_}} = (catch lists:ifoldr(badfun, [], [])),
+    ?line {'EXIT',{function_clause,_}} = (catch lists:ifoldr(BadFun, [], [])),
     
     ok.
 
