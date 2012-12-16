@@ -35,7 +35,7 @@
 
 -export([merge/3, rmerge/3, sort/2, umerge/3, rumerge/3, usort/2]).
 
--export([all/2,any/2,map/2,flatmap/2,foldl/3,foldr/3,filter/2,
+-export([all/2,any/2,map/2,flatmap/2,foldl/3,ifoldl/3,foldr/3,filter/2,
 	 partition/2,zf/2,
 	 mapfoldl/3,mapfoldr/3,foreach/2,takewhile/2,dropwhile/2,splitwith/2,
 	 split/2]).
@@ -1247,6 +1247,23 @@ flatmap(F, []) when is_function(F, 1) -> [].
 foldl(F, Accu, [Hd|Tail]) ->
     foldl(F, F(Hd, Accu), Tail);
 foldl(F, Accu, []) when is_function(F, 2) -> Accu.
+
+-spec ifoldl(Fun, Acc0, List) -> Acc1 when
+      Fun :: fun((Elem :: T, Index, AccIn) -> AccOut),
+      Acc0 :: term(),
+      Acc1 :: term(),
+      AccIn :: term(),
+      AccOut :: term(),
+      Index :: integer(),
+      List :: [T],
+      T :: term().
+
+ifoldl(F, Accu, [Hd|Tail]) ->
+    ifoldl(F, F(Hd, 1, Accu), 2, Tail);
+ifoldl(F, Accu, []) when is_function(F, 3) -> Accu.
+ifoldl(F, Accu, Index, [Hd|Tail]) ->
+    ifoldl(F, F(Hd, Index, Accu), Index+1, Tail);
+ifoldl(F, Accu, _, []) when is_function(F, 3) -> Accu.
 
 -spec foldr(Fun, Acc0, List) -> Acc1 when
       Fun :: fun((Elem :: T, AccIn) -> AccOut),
