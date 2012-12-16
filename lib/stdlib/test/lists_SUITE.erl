@@ -60,7 +60,7 @@
 	 ufunsort_error/1,
 	 zip_unzip/1, zip_unzip3/1, zipwith/1, zipwith3/1,
 	 filter_partition/1, 
-	 ifoldl/1, ifoldr/1, imap/1,
+	 ifoldl/1, ifoldr/1, imap/1, ifilter/1, ipartition/1,
 	 otp_5939/1, otp_6023/1, otp_6606/1, otp_7230/1,
 	 suffix/1, subtract/1]).
 
@@ -87,7 +87,7 @@ all() ->
      {group, funsort}, {group, ufunsort}, {group, sublist},
      {group, flatten}, {group, seq}, zip_unzip, zip_unzip3,
      zipwith, zipwith3, filter_partition, {group, tickets},
-     ifoldl, ifoldr, imap,
+     ifoldl, ifoldr, imap, ifilter, ipartition,
      suffix, subtract].
 
 groups() -> 
@@ -2626,6 +2626,46 @@ imap(Config) when is_list(Config) ->
     BadFun = fun(_) -> 1 end,
     ?line {'EXIT',{function_clause,_}} = (catch lists:imap(badfun, [])),
     ?line {'EXIT',{function_clause,_}} = (catch lists:imap(BadFun, [])),
+    
+    ok.
+
+%% Test lists:ifilter/2
+ifilter(Config) when is_list(Config) ->
+    %% Filter even indexed elements.
+    Filter = fun(_, I) -> I rem 2 == 0 end,
+    
+    ?line [] = lists:ifilter(Filter, []),
+    ?line [b] = lists:ifilter(Filter, [a, b]),
+    
+    %% Longer lists.
+    ?line Seq = lists:seq(55, 150),
+    ?line Res = lists:ifilter(Filter, Seq),
+    ?line [56, 58, 60|_] = Res,
+    
+    %% Error cases.
+    BadFun = fun(_) -> 1 end,
+    ?line {'EXIT',{function_clause,_}} = (catch lists:ifilter(badfun, [])),
+    ?line {'EXIT',{function_clause,_}} = (catch lists:ifilter(BadFun, [])),
+    
+    ok.
+
+%% Test lists:ipartition/2
+ipartition(Config) when is_list(Config) ->
+    %% Parititon every other element.
+    Partition = fun(_, I) -> I rem 2 == 1 end,
+    
+    ?line {[], []} = lists:ipartition(Partition, []),
+    ?line {[a], [b]} = lists:ipartition(Partition, [a, b]),
+    
+    %% Longer lists.
+    ?line Seq = lists:seq(55, 150),
+    ?line Res = lists:ipartition(Partition, Seq),
+    ?line {[55, 57, 59|_], [56, 58, 60|_]} = Res,
+    
+    %% Error cases.
+    BadFun = fun(_) -> 1 end,
+    ?line {'EXIT',{function_clause,_}} = (catch lists:ipartition(badfun, [])),
+    ?line {'EXIT',{function_clause,_}} = (catch lists:ipartition(BadFun, [])),
     
     ok.
 

@@ -36,7 +36,8 @@
 -export([merge/3, rmerge/3, sort/2, umerge/3, rumerge/3, usort/2]).
 
 -export([all/2,any/2,map/2,imap/2,flatmap/2,
-	 foldl/3,ifoldl/3,foldr/3,ifoldr/3,filter/2,partition/2,zf/2,
+	 foldl/3,ifoldl/3,foldr/3,ifoldr/3,filter/2,ifilter/2,
+	 partition/2,ipartition/2,zf/2,
 	 mapfoldl/3,mapfoldr/3,foreach/2,takewhile/2,dropwhile/2,splitwith/2,
 	 split/2]).
 
@@ -1167,10 +1168,14 @@ rumerge(T1, [H2 | T2]) ->
 %% all(Predicate, List)
 %% any(Predicate, List)
 %% map(Function, List)
+%% imap(Function, List)
 %% flatmap(Function, List)
 %% foldl(Function, First, List)
+%% ifoldl(Function, First, List)
 %% foldr(Function, Last, List)
+%% ifoldr(Function, First, List)
 %% filter(Predicate, List)
+%% ifilter(Predicate, List)
 %% zf(Function, List)
 %% mapfoldl(Function, First, List)
 %% mapfoldr(Function, Last, List)
@@ -1319,6 +1324,25 @@ ifoldr(F, Accu, _, []) when is_function(F, 3) -> Accu.
 filter(Pred, List) when is_function(Pred, 1) ->
     [ E || E <- List, Pred(E) ].
 
+-spec ifilter(Pred, List1) -> List2 when
+      Pred :: fun((Elem :: T, Index) -> boolean()),
+      List1 :: [T],
+      List2 :: [T],
+      Index :: integer(),
+      T :: term().
+
+ifilter(Pred, List) when is_function(Pred, 2) ->
+    ifilter(Pred, 1, List).
+ifilter(Pred, Index, []) ->
+    [];
+ifilter(Pred, Index, [Hd|Tail]) ->
+    case Pred(Hd, Index) of
+        true ->
+            [Hd|ifilter(Pred, Index+1, Tail)];
+        false ->
+            ifilter(Pred, Index+1, Tail)
+    end.
+
 %% Equivalent to {filter(F, L), filter(NotF, L)}, if NotF = 'fun(X) ->
 %% not F(X) end'.
 
@@ -1339,6 +1363,26 @@ partition(Pred, [H | T], As, Bs) ->
     end;
 partition(Pred, [], As, Bs) when is_function(Pred, 1) ->
     {reverse(As), reverse(Bs)}.
+
+-spec ipartition(Pred, List) -> {Satisfying, NotSatisfying} when
+      Pred :: fun((Elem :: T, Index) -> boolean()),
+      List :: [T],
+      Satisfying :: [T],
+      NotSatisfying :: [T],
+      Index :: integer(),
+      T :: term().
+
+ipartition(Pred, L) ->
+    ipartition(Pred, 1, L, [], []).
+
+ipartition(Pred, Index, [H | T], As, Bs) ->
+    case Pred(H, Index) of
+	true -> ipartition(Pred, Index+1, T, [H | As], Bs);
+	false -> ipartition(Pred, Index+1, T, As, [H | Bs])
+    end;
+ipartition(Pred, _, [], As, Bs) when is_function(Pred, 2) ->
+    {reverse(As), reverse(Bs)}.
+
 
 -spec zf(fun((T) -> boolean() | {'true', X}), [T]) -> [(T | X)].
 
